@@ -4,11 +4,47 @@ API Course, Lesson 1 -->
  <head>
  <!-- styles put here, but you can include a CSS file and reference it instead! -->
    <style type="text/css">
-     html, body { height: 100%; margin: 0; padding: 0; }
-     #map { height: 100%; }
+     html, body { 
+      height: 100%; 
+      margin: 0; 
+      padding: 0; 
+    }
+     #map { 
+      bottom: 0px;
+      height: 100%;
+      left: 362px;
+      position: absolute;
+      right: 0px; 
+    }
+
+    .option-box {
+      background: #fff;
+      border: 1px solid #999;
+      border-radius: 3px;
+      height: 100%;
+      line-height: 35px;
+      padding: 10px 10px 30px 10px;
+      text-align: left;
+      width: 340px;
+    }
+    #show-listing {
+      width: 45%;
+    }
+    #hide-listing {
+      width: 45%;
+    }
    </style>
  </head>
  <body>
+    <div class="container">
+      <div class="option-box">
+        <h1>Find your New NYC Home</h1>
+        <div>
+          <input type="button" id="show-listing" value="Show Listing">
+          <input type="button" id="hide-listing" value="Hide Listing">
+        </div>
+      </div>
+    </div>
    <!-- TODO 1: Create a place to put the map in the HTML-->
    <div id="map"></div>
    <script>
@@ -36,16 +72,17 @@ API Course, Lesson 1 -->
 
 
        var infoWindow = new google.maps.InfoWindow();
-       var bounds = new google.maps.LatLngBounds();
+       //var bounds = new google.maps.LatLngBounds();
        //The following group uses the location array to create an array of markers on initialize
        var markers = [];
+
+
        for(var i=0; i<locations.length; i++){
           //Get the position from the location array.
           var position = locations[i].location;
           var title = locations[i].title;
           //Create a maker per location, and put into markers array.
           var marker = new google.maps.Marker({
-            map: map,
             position: position,
             title: title,
             animation: google.maps.Animation.DROP,
@@ -54,16 +91,30 @@ API Course, Lesson 1 -->
           // Push the marker to our array of markers
           markers.push(marker);
           // Extend the boundaries of the map for eaech marker
-          bounds.extend(marker.position);
+          //bounds.extend(marker.position);
           // Create an onclick event to open an infowindow at each marker
           marker.addListener('click', function(){
             populateInfoWindow(this, infoWindow);
           });
        }
 
-       map.fitBounds(bounds);
+       document.getElementById('show-listing').addEventListener('click', showListing);
+       document.getElementById('hide-listing').addEventListener('click', hideListing);
 
+       function showListing(){
+          var bounds = new google.maps.LatLngBounds();
+          for(var i=0; i<markers.length; i++){
+            markers[i].setMap(map);
+            bounds.extend(markers[i].position);
+          }
+          map.fitBounds(bounds);
+       }
 
+       function hideListing(){
+          for(var i=0; i<markers.length; i++){
+            markers[i].setMap(null); 
+          }
+       }
 
        //marker.setMap(map);
        function populateInfoWindow(marker, infowindow) {
