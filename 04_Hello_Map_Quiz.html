@@ -120,22 +120,47 @@ API Course, Lesson 1 -->
        function populateInfoWindow(marker, infowindow) {
           //Check to make sure the infoWindow is not already openned on this marker
           if(infoWindow.marker != marker) {
+            //Clear the infowindow content to give the streetview time to load
+            infoWindow.setContent('');
             infowindow.marker = marker;
-            infoWindow.setContent('<div>'+ marker.title +'</div>');
-            infoWindow.open(map, marker);
+            //infoWindow.setContent('<div>'+ marker.title +'</div>');
+            
             //Make sure the marker property is cleared if the infowindow is closed.
             infoWindow.addListener('closeclick', function(){
               infowindow.setMarker = null;
-            })
+            });
+            //Create a streetViewService and radius
+            var streetViewService = new google.maps.StreetViewService();
+            var radius = 50;
+
+            //Init a getStreetView which will reutnr the panorama view for the street view depending on the status 
+            function getStreetView(data, status) {
+              if(status == google.maps.StreetViewStatus.OK) {
+                var nearStreetViewLocation =  data.location.LatLng;
+                var heading = google.maps.geometry.spherical.computeHeading(nearStreetViewLocation, marker.position);
+                infowindow.setContent('div' + marker.title + '</div><div id="pano"></div>');
+                var paronamaOptions = {
+                  position: nearStreetViewLocation,
+                  pov : {
+                    heading: heading,
+                    pitch: 30
+                  }
+                };
+                var paronama = new google.maps.StreetViewPanorama(document.getElementById('pano'), paronamaOptions);
+              } else {
+                infoWindow.setContent('<div>' + market.title + '</div>' + '<div>No Street View Found</div>');
+              }
+            }
+            streetViewService.getPanoramaByLocation(marker.position, radius, getStreetView);
+            infoWindow.open(map, marker);
           }
-       }
-       
-     }
+       } 
+      }
    </script>
    <!--TODO: Load the JS API ASYNCHRONOUSLY below.-->
 
    <script async defer
-        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBnXUYT2HmjO5jvJAHPk84_uj8dvNUVHXY&v=3&callback=initMap">
+        src="https://maps.googleapis.com/maps/api/js?libraries=geometry&key=AIzaSyBnXUYT2HmjO5jvJAHPk84_uj8dvNUVHXY&v=3&callback=initMap">
    </script>
  </body>
 </html>
