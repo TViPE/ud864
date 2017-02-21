@@ -33,6 +33,10 @@ API Course, Lesson 1 -->
     #hide-listing {
       width: 45%;
     }
+    #pano {
+      width: 200px;
+      height: 200px;
+    }
    </style>
  </head>
  <body>
@@ -43,6 +47,9 @@ API Course, Lesson 1 -->
           <input type="button" id="show-listing" value="Show Listing">
           <input type="button" id="hide-listing" value="Hide Listing">
         </div>
+        <hr>
+        <span class="text">Draw a shape to search within it for homes!</span>
+        <input type="button" id="toggle-drawing" value="Drawing Tools">
       </div>
     </div>
    <!-- TODO 1: Create a place to put the map in the HTML-->
@@ -136,7 +143,7 @@ API Course, Lesson 1 -->
             //Init a getStreetView which will reutnr the panorama view for the street view depending on the status 
             function getStreetView(data, status) {
               if(status == google.maps.StreetViewStatus.OK) {
-                var nearStreetViewLocation =  data.location.LatLng;
+                var nearStreetViewLocation =  data.location.latLng;
                 var heading = google.maps.geometry.spherical.computeHeading(nearStreetViewLocation, marker.position);
                 infowindow.setContent('div' + marker.title + '</div><div id="pano"></div>');
                 var paronamaOptions = {
