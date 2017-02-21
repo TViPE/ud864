@@ -37,6 +37,11 @@ API Course, Lesson 1 -->
       width: 200px;
       height: 200px;
     }
+    #toggle-drawing {
+      width: 27%;
+      position: relative;
+      margin-left: 10px;
+    }
    </style>
  </head>
  <body>
@@ -79,9 +84,23 @@ API Course, Lesson 1 -->
 
 
        var infoWindow = new google.maps.InfoWindow();
+
+       //Initialize the drawing manager
+       var drawingManager =  new google.maps.drawing.DrawingManager({
+        drawingMode : google.maps.drawing.OverlayType.POLYGON,
+        drawingControl : true,
+        drawingControlOptions : {
+          position: google.maps.ControlPosition.TOP_LEFT,
+          drawingMode: [google.maps.drawing.OverlayType.POLYGON]
+        }
+       });
+
        //var bounds = new google.maps.LatLngBounds();
        //The following group uses the location array to create an array of markers on initialize
        var markers = [];
+
+       //This global polygon varibale is to ensure only ONE  polygon is rendered
+       var polygon = null;
 
 
        for(var i=0; i<locations.length; i++){
@@ -107,6 +126,58 @@ API Course, Lesson 1 -->
 
        document.getElementById('show-listing').addEventListener('click', showListing);
        document.getElementById('hide-listing').addEventListener('click', hideListing);
+       //Add an event listener when the button is clicked, the drawing manager will display
+       document.getElementById('toggle-drawing').addEventListener('click', function(){
+        toggleDrawing(drawingManager);
+       });
+
+       // Addd an event listener so that te polygon is captured, call the 
+       // searchWithinPolygon function. This will show the markers in the polygon
+       // and hide any outside of it.
+       drawingManager.addListener('overlaycomplete', function(event){
+        // First, check if there is an existing polygon.
+        // If there is, get rid of it and remove the markers
+        if(polygon) {
+          polygon.setMap(null);
+          hideListing();
+        }
+        // Switching the drawing mode to the HAND
+        drawingManager.setDrawingMode(null);
+        // Creating a new editable polygon from the overlay
+        polygon = event.overlay;
+        polygon.setEditable(true);
+        // Search within the polygon
+        searchWithinPolygon();
+        // Make sure the search is re-done if the poly is changed.
+        polygon.getPath().addListener('set_at', searchWithinPolygon);
+        polygon.getPath().addListener('insert_at', searchWithinPolygon);
+       })
+
+       // searchWithinPolygon() -- This function hides all markers outside the polygon,
+       // and shows only the ones within it. THis is so that the user can specify an exact 
+       // of search.
+       function searchWithinPolygon() {
+          for (var i = 0; i < markers.length; i++) {
+            if (google.maps.geometry.poly.containsLocation(markers[i].position, polygon)){
+              markers[i].setMap(map);
+            } else {
+              markers[i].setMap(null);
+            }
+          }
+       }
+
+       //toggleDrawing(drawingManager) - This function shows and hide the drawing options
+       function toggleDrawing(drawingManager){
+          if(drawingManager.map){
+            drawingManager.setMap(null);
+            // In case the user drew anything, get rid of the polygon
+            if (polygon) {
+              polygon.setMap(null);
+            }
+          } else {
+            drawingManager.setMap(map);
+          }
+       }
 
        function showListing(){
           var bounds = new google.maps.LatLngBounds();
@@ -167,7 +238,7 @@ API Course, Lesson 1 -->
    <!--TODO: Load the JS API ASYNCHRONOUSLY below.-->
 
    <script async defer
-        src="https://maps.googleapis.com/maps/api/js?libraries=geometry&key=AIzaSyBnXUYT2HmjO5jvJAHPk84_uj8dvNUVHXY&v=3&callback=initMap">
+        src="https://maps.googleapis.com/maps/api/js?libraries=geometry,drawing&key=AIzaSyBnXUYT2HmjO5jvJAHPk84_uj8dvNUVHXY&v=3&callback=initMap">
    </script>
  </body>
 </html>
