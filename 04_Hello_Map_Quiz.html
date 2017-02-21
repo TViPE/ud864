@@ -151,8 +151,12 @@ API Course, Lesson 1 -->
         // Make sure the search is re-done if the poly is changed.
         polygon.getPath().addListener('set_at', searchWithinPolygon);
         polygon.getPath().addListener('insert_at', searchWithinPolygon);
+         // Compute the area of the polygon
+        var area = google.maps.geometry.spherical.computeArea(polygon.getPath());
+        window.alert(area + "SQUARE METERS");
        })
 
+       
        // searchWithinPolygon() -- This function hides all markers outside the polygon,
        // and shows only the ones within it. THis is so that the user can specify an exact 
        // of search.
