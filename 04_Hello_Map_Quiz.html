@@ -49,6 +49,13 @@ API Course, Lesson 1 -->
     #zoom-to-area {
       width: 24%;
     }
+    #search-within-time-text {
+      width: 84%;
+    }
+    .text {
+      font-size: 12px;
+    }
+
    </style>
  </head>
  <body>
@@ -66,6 +73,25 @@ API Course, Lesson 1 -->
         <div>
           <input type="text" id="zoom-to-area-text" placeholder="Enter your favorite area!">
           <input type="button" id="zoom-to-area" value="Zoom">
+        </div>
+        <hr>
+        <div>
+          <span class="text">Within</span>
+          <select id="max-duration">
+            <option value="10">10 min</option>
+            <option value="15">15 min</option>
+            <option value="30">30 min</option>
+            <option value="60">60 min</option>
+          </select>
+          <select id="mode">
+            <option value="DRIVING">drive</option>
+            <option value="WALKING">walk</option>
+            <option value="BICYCLING">bike</option>
+            <option value="TRANSIT">transit ride</option>
+          </select>
+          <span class="text">of</span>
+          <input type="text" id="search-within-time-text" placeholder="Ex: Google Office NYC">
+          <input type="button" id="search-within-time" value="Go">
         </div>
       </div> 
     </div>
@@ -144,6 +170,9 @@ API Course, Lesson 1 -->
        });
        document.getElementById('zoom-to-area').addEventListener('click', function(){
         zoomToArea();
+       })
+       document.getElementById('search-within-time').addEventListener('click', function(){
+        searchWithinTime();
        })
 
        // Addd an event listener so that te polygon is captured, call the 
@@ -245,7 +274,7 @@ API Course, Lesson 1 -->
                 };
                 var paronama = new google.maps.StreetViewPanorama(document.getElementById('pano'), paronamaOptions);
               } else {
-                infoWindow.setContent('<div>' + market.title + '</div>' + '<div>No Street View Found</div>');
+                infoWindow.setContent('<div>' + marker.title + '</div>' + '<div>No Street View Found</div>');
               }
             }
             streetViewService.getPanoramaByLocation(marker.position, radius, getStreetView);
@@ -276,11 +305,83 @@ API Course, Lesson 1 -->
               } else {
                 window.alert('We could not find that location - try entering a more specific place.');
               }
-            })
+          })
         }
-
-
        }
+
+       // searchWithinTime() - This function allows the user to input a desired travel time.
+       // in minutes, and a travel mode, and a location - and only shows the listings that are
+       // within that travel time (via that travel mode) of the location
+       function searchWithinTime(){
+        //Initialize distance matrix service
+        var distanceMatrixService = new google.maps.distanceMatrixService;
+        var address = document.getElementById('search-within-time-text').value;
+        //Check to make sure the input isn't blank
+        if(address == ''){
+          window.alert('You must enter an address');
+        } else {
+          hideListing();
+          // Use the distance matrix service to calculate the duration of the routes
+          // between our makers, and the destination address entered by the user.
+          // Then put all the origins into an origin matrix
+          var origins = [];
+          for(var i = 0; i < markers.length; i++) {
+            origins[i] =  markers[i].position;
+          }
+          var destination = address;
+          var mode = document.getElementById('mode').value;
+          // Now that both the origins and destination are defined, get all the
+          // info for the distance between them
+          distanceMatrixService.getDistanceMatrix({
+            origins: origins,
+            destination: [destination],
+            travelMode: google.maps.TravelMode[mode],
+            unitSystem: google.maps.UnitSystem.IMPERIAL
+          }, function (results, status) {
+            if ( status !== google.maps.distanceMatrixStatus.OK){
+              window.alert('Error was: ' +  status);
+            } else {
+              displayMarkersWithinTime(response);
+            }
+          }
+          })
+        }
+       }
+
+       //--------
+       function displayMarkersWithinTime(response) {
+          var maxDuration =  document.getElementById('max-duration').value;
+          var origins = response.originAddresses;
+          var destination = response.destinationAddresses;
+          var atLeastOne = false;
+
+          for (var i = 0; i<origins.length; i++){
+            var results = response.rows[i].elements;
+            for (var j=0; j<results.length; j++) {
+              var element = resutls[i]; 
+              if (element.status === "OK") {
+                var distanceText =  element.distance.text;
+                var duration = element.duration.value/60;
+                var durationText = element.duration.text;
+                if (duration <= maxDuration) {
+                  markers[i].setMap(map);
+                  atLeastOne = true;
+                  var infoWindow = new google.maps.InfoWindow({
+                    content: durationText + ' away,' + distanceText;
+                  });
+                  infowindow.open(map, makers[i]);
+                  markers[i].infowindow = infowindow;
+                  google.maps.event.addListener(markers[i], 'click', function(){
+                    this.infowindow.close();
+                  })
+                }
+              }
+
+            }
+          }
+       }
+       //--------
+
       }
    </script>
    <!--TODO: Load the JS API ASYNCHRONOUSLY below.-->
